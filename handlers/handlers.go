@@ -12,7 +12,12 @@ import (
 // ハンドラの定義
 func HelloHandler(w http.ResponseWriter, req *http.Request) {
 	// req: http.Requestで受けとって、w: http.ResponseWriterに書き込む
-	io.WriteString(w, "Hello, world!\n")
+	if req.Method == http.MethodGet {
+		io.WriteString(w, "Hello, world!\n")
+	} else {
+		// Invalid methodを405番のステータスコードとともに返す
+		http.Error(w, "Invalid method", http.StatusMethodNotAllowed)
+	}
 }
 
 func PostArticleHandler(w http.ResponseWriter, req *http.Request) {
