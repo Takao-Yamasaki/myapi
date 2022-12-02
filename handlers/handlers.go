@@ -34,7 +34,7 @@ func HelloHandler(w http.ResponseWriter, req *http.Request) {
 func PostArticleHandler(w http.ResponseWriter, req *http.Request) {
 	// バイトスライスなんらかの形で用意
 	// content-lengthフィールドの値を取得
-	length ,err := strconv.Atoi(req.Header.Get("Content-Length"))
+	length, err := strconv.Atoi(req.Header.Get("Content-Length"))
 	if err != nil {
 		http.Error(w, "cannot get content length\n", http.StatusBadRequest)
 		return
@@ -43,17 +43,26 @@ func PostArticleHandler(w http.ResponseWriter, req *http.Request) {
 
 	// リクエストボディを読み出し
 	// エラーの内容がEOFか判定するために、errors.ls関数を使用
-	if _, err := req.Body.Read(reqBodybuffer); !errors.Is(err,io.EOF) {
+	if _, err := req.Body.Read(reqBodybuffer); !errors.Is(err, io.EOF) {
 		// EOF以外だった場合、500番エラーを返却
 		http.Error(w, "fail to get request body\n", http.StatusBadRequest)
 		return
-	} 
+	}
 
 	// ボディをクローズする
 	defer req.Body.Close()
 
-	article := models.Article1
-	// jsonエンコードする
+	//jsonをデコード(json→構造体)
+	var reqArticle models.Article
+	if err := json.Unmarshal(reqBodybuffer, &reqArticle); err != nil {
+		http.Error(w, "fail to decode json\n", http.StatusBadRequest)
+		return
+	}
+
+	// article := models.Article1
+	article := reqArticle
+
+	// jsonエンコードする(構造体→json)
 	jsonData, err := json.Marshal(article)
 	if err != nil {
 		// エンコードに失敗したということで、500番エラー（サーバー内部でのエラー）を出す
@@ -75,14 +84,14 @@ func ArticleListHandler(w http.ResponseWriter, req *http.Request) {
 	if p, ok := queryMap["page"]; ok && len(p) > 0 {
 		// パラメータpageに対応する１つ目の値を取得し、数値に変換する
 		var err error
-		page , err = strconv.Atoi(p[0])
+		page, err = strconv.Atoi(p[0])
 		// 数値に変換できない場合は400番エラーを返す
 		// 400: ユーザーリクエストの値が不正である
 		if err != nil {
 			http.Error(w, "Invalid query parameter", http.StatusBadRequest)
 			return
 		}
-	// パラメータが存在しなかった場合は1を付与する
+		// パラメータが存在しなかった場合は1を付与する
 	} else {
 		page = 1
 	}
@@ -107,7 +116,7 @@ func ArticleDetailHandler(w http.ResponseWriter, req *http.Request) {
 		http.Error(w, "Invalid query parameter", http.StatusBadRequest)
 		return
 	}
-	
+
 	article := models.Article1
 	jsonData, err := json.Marshal(article)
 	if err != nil {
