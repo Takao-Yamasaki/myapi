@@ -2,12 +2,14 @@
 package handlers
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"strconv"
 
 	"github.com/gorilla/mux"
+	"github.com/yourname/reponame/models"
 )
 
 // ハンドラ: HTTPリクエストを受け取って、それに対するHTTPレスポンスの内容をコネクションに書き込む
@@ -29,14 +31,16 @@ func HelloHandler(w http.ResponseWriter, req *http.Request) {
 }
 
 func PostArticleHandler(w http.ResponseWriter, req *http.Request) {
-	io.WriteString(w, "Posting Article ... \n")
-
-	/*if req.Method == http.MethodPost {
-		io.WriteString(w, "Posting Article ... \n")
-	} else {
-		http.Error(w, "Invalid method", http.StatusMethodNotAllowed)
+	article := models.Article1
+	// jsonエンコードする
+	jsonData, err := json.Marshal(article)
+	if err != nil {
+		// エンコードに失敗したということで、500番エラー（サーバー内部でのエラー）を出す
+		http.Error(w, "fail to encode json\n", http.StatusInternalServerError)
+		return
 	}
-	*/
+
+	w.Write(jsonData)
 }
 
 // ブログ一覧を取得するハンドラ
@@ -44,7 +48,7 @@ func ArticleListHandler(w http.ResponseWriter, req *http.Request) {
 	// クエリパラメータを取得
 	queryMap := req.URL.Query()
 
-	var  page int
+	var page int
 	// パラメータのpageが一つ以上あるなら、
 	// キー:pageの存在確認 true, falseをokに格納
 	if p, ok := queryMap["page"]; ok && len(p) > 0 {
@@ -61,17 +65,18 @@ func ArticleListHandler(w http.ResponseWriter, req *http.Request) {
 	} else {
 		page = 1
 	}
-	
-	resString := fmt.Sprintf("Article List (page %d)\n", page)
-	io.WriteString(w, resString)
 
-	/*
-		if req.Method == http.MethodGet {
-			io.WriteString(w, "Article List\n")
-		} else {
-			http.Error(w, "Invalid method", http.StatusMethodNotAllowed)
-		}
-	*/
+	articleList := []models.Article{models.Article1, models.Article2}
+
+	jsonData, err := json.Marshal(articleList)
+
+	if err != nil {
+		errMsg := fmt.Sprintf("fail to encode json (page %d)\n", page)
+		http.Error(w, errMsg, http.StatusInternalServerError)
+		return
+	}
+
+	w.Write(jsonData)
 }
 
 // 記事No.xxの投稿データを取得するエンドポイント
@@ -81,40 +86,37 @@ func ArticleDetailHandler(w http.ResponseWriter, req *http.Request) {
 		http.Error(w, "Invalid query parameter", http.StatusBadRequest)
 		return
 	}
-	resString := fmt.Sprintf("Article No.%d\n", articleID)
-	io.WriteString(w, resString)
+	
+	article := models.Article1
+	jsonData, err := json.Marshal(article)
+	if err != nil {
+		errMsg := fmt.Sprint("fails to encode json (artcleID %d)\n", articleID)
+		http.Error(w, errMsg, http.StatusInternalServerError)
+		return
+	}
 
-	/*
-		if req.Method == http.MethodGet {
-			io.WriteString(w, "Article No.1\n")
-		} else {
-			http.Error(w, "Invalid method", http.StatusMethodNotAllowed)
-		}
-	*/
+	w.Write(jsonData)
 }
 
 // 記事にいいね！をつけるハンドラ
 func PostNiceHandler(w http.ResponseWriter, req *http.Request) {
-	io.WriteString(w, "Posting Nice...\n")
 
-	/*
-		if req.Method == http.MethodPost {
-			io.WriteString(w, "Posting Nice...\n")
-		} else {
-			http.Error(w, "Invalid method", http.StatusMethodNotAllowed)
-		}
-	*/
+	article := models.Article1
+	jsonData, err := json.Marshal(article)
+	if err != nil {
+		http.Error(w, "fail to encode json\n", http.StatusInternalServerError)
+		return
+	}
+	w.Write(jsonData)
 }
 
 // 記事にコメントを投稿するハンドラ
 func PostCommentHandler(w http.ResponseWriter, req *http.Request) {
-	io.WriteString(w, "Posting Comment...\n")
-
-	/*
-		if req.Method == http.MethodPost {
-			io.WriteString(w, "Posting Comment...\n")
-		} else {
-			http.Error(w, "Invalid method", http.StatusMethodNotAllowed)
-		}
-	*/
+	comment := models.Comment1
+	jsonData, err := json.Marshal(comment)
+	if err != nil {
+		http.Error(w, "fail to encode json\n", http.StatusInternalServerError)
+		return
+	}
+	w.Write(jsonData)
 }
