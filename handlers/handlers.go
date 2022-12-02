@@ -3,6 +3,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -31,6 +32,26 @@ func HelloHandler(w http.ResponseWriter, req *http.Request) {
 }
 
 func PostArticleHandler(w http.ResponseWriter, req *http.Request) {
+	// バイトスライスなんらかの形で用意
+	// content-lengthフィールドの値を取得
+	length ,err := strconv.Atoi(req.Header.Get("Content-Length"))
+	if err != nil {
+		http.Error(w, "cannot get content length\n", http.StatusBadRequest)
+		return
+	}
+	reqBodybuffer := make([]byte, length)
+
+	// リクエストボディを読み出し
+	// エラーの内容がEOFか判定するために、errors.ls関数を使用
+	if _, err := req.Body.Read(reqBodybuffer); !errors.Is(err,io.EOF) {
+		// EOF以外だった場合、500番エラーを返却
+		http.Error(w, "fail to get request body\n", http.StatusBadRequest)
+		return
+	} 
+
+	// ボディをクローズする
+	defer req.Body.Close()
+
 	article := models.Article1
 	// jsonエンコードする
 	jsonData, err := json.Marshal(article)
