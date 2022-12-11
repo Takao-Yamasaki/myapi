@@ -11,6 +11,32 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
+func TestSelectArticleList(t *testing.T) {
+	// データベースに接続
+	dbUser := "docker"
+	dbPassword := "docker"
+	dbDatabase := "sampledb"
+	dbConn := fmt.Sprintf("%s:%s@tcp(127.0.0.1:3306)/%s?parseTime=true", dbUser, dbPassword, dbDatabase)
+
+	db, err := sql.Open("mysql", dbConn)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer db.Close()
+
+	// テスト対象の関数を実行
+	expectedNum := 2
+	got, err := repositories.SelectArticleList(db, 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Failにする
+	if num := len(got); num != expectedNum {
+		t.Errorf("want %d but got %d articles\n", expectedNum, num)
+	}
+}
+
 func TestSelectArticleDetail(t *testing.T) {
 	// データベースに接続する
 	dbUser := "docker"
