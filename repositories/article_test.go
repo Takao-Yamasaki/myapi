@@ -12,21 +12,9 @@ import (
 )
 
 func TestSelectArticleList(t *testing.T) {
-	// データベースに接続
-	dbUser := "docker"
-	dbPassword := "docker"
-	dbDatabase := "sampledb"
-	dbConn := fmt.Sprintf("%s:%s@tcp(127.0.0.1:3306)/%s?parseTime=true", dbUser, dbPassword, dbDatabase)
-
-	db, err := sql.Open("mysql", dbConn)
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer db.Close()
-
 	// テスト対象の関数を実行
 	expectedNum := 2
-	got, err := repositories.SelectArticleList(db, 1)
+	got, err := repositories.SelectArticleList(testDB, 1)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -38,19 +26,6 @@ func TestSelectArticleList(t *testing.T) {
 }
 
 func TestSelectArticleDetail(t *testing.T) {
-	// データベースに接続する
-	dbUser := "docker"
-	dbPassword := "docker"
-	dbDatabase := "sampledb"
-	dbConn := fmt.Sprintf("%s:%s@tcp(127.0.0.1:3306)/%s?parseTime=true", dbUser, dbPassword, dbDatabase)
-
-	db, err := sql.Open("mysql", dbConn)
-	// 接続できなかった場合はテストそのものが続行不可
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer db.Close()
-
 	// 記事の内容
 
 	tests := []struct {
@@ -81,7 +56,7 @@ func TestSelectArticleDetail(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.testTitle, func(t *testing.T) {
 			// テスト結果として期待する値を定義
-			got, err := repositories.SelectArticleDetail(db, test.expected.ID)
+			got, err := repositories.SelectArticleDetail(testDB, test.expected.ID)
 			if err != nil {
 				t.Fatal(err)
 			}
