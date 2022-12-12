@@ -1,14 +1,10 @@
 package repositories_test
 
 import (
-	"database/sql"
-	"fmt"
 	"testing"
 
 	"github.com/yourname/reponame/models"
 	"github.com/yourname/reponame/repositories"
-
-	_ "github.com/go-sql-driver/mysql"
 )
 
 func TestSelectArticleList(t *testing.T) {

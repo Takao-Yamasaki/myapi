@@ -3,12 +3,15 @@ package repositories_test
 import (
 	"database/sql"
 	"fmt"
+	"os"
+	"testing"
 
 	_ "github.com/go-sql-driver/mysql"
 )
 
 var testDB *sql.DB
 
+// 前処理
 func setup() error {
 	// データベースに接続
 	dbUser := "docker"
@@ -17,13 +20,26 @@ func setup() error {
 	dbConn := fmt.Sprintf("%s:%s@tcp(127.0.0.1:3306)/%s?parseTime=true", dbUser, dbPassword, dbDatabase)
 
 	var err error
-	testDB, err := sql.Open("mysql", dbConn)
+	testDB, err = sql.Open("mysql", dbConn)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
+// 後処理
 func teardown() {
 	testDB.Close()
+}
+
+// テストの実行
+func TestMain(m *testing.M) {
+	err := setup()
+	if err != nil {
+		os.Exit(1)
+	}
+
+	m.Run()
+
+	teardown()
 }
