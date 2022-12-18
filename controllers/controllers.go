@@ -1,4 +1,4 @@
-package handlers
+package controllers
 
 import (
 	"encoding/json"
@@ -11,15 +11,20 @@ import (
 	"github.com/yourname/reponame/services"
 )
 
-// ハンドラ: HTTPリクエストを受け取って、それに対するHTTPレスポンスの内容をコネクションに書き込む
-// 引数にhttp.ResponseWriter型とhttp.Request型をとる。引数はなし。
+type MyAppController struct {
+	service *services.MyAppService
+}
+
+func NewMyAppController(s *services.MyAppService) *MyAppController {
+	return &MyAppController{service: s}
+}
 
 // ハンドラの定義
-func HelloHandler(w http.ResponseWriter, req *http.Request) {
+func (c *MyAppController) HelloHandler(w http.ResponseWriter, req *http.Request) {
 	io.WriteString(w, "Hello, world!\n")
 }
 
-func PostArticleHandler(w http.ResponseWriter, req *http.Request) {
+func (c *MyAppController) PostArticleHandler(w http.ResponseWriter, req *http.Request) {
 	//jsonをデコード(json→構造体)
 	var reqArticle models.Article
 	if err := json.NewDecoder(req.Body).Decode(&reqArticle); err != nil {
@@ -27,8 +32,7 @@ func PostArticleHandler(w http.ResponseWriter, req *http.Request) {
 	}
 
 	// jsonエンコードする(構造体→json)
-
-	article, err := services.PostArticleService(reqArticle)
+	article, err := c.service.PostArticleService(reqArticle)
 	if err != nil {
 		http.Error(w, "fail internal exec\n", http.StatusInternalServerError)
 		return
@@ -38,7 +42,7 @@ func PostArticleHandler(w http.ResponseWriter, req *http.Request) {
 }
 
 // ブログ一覧を取得するハンドラ
-func ArticleListHandler(w http.ResponseWriter, req *http.Request) {
+func (c *MyAppController) ArticleListHandler(w http.ResponseWriter, req *http.Request) {
 	queryMap := req.URL.Query()
 
 	var page int
@@ -54,7 +58,7 @@ func ArticleListHandler(w http.ResponseWriter, req *http.Request) {
 	}
 
 	// jsonエンコードする（構造体→json）
-	articleList, err := services.GetArticleListService(page)
+	articleList, err := c.service.GetArticleListService(page)
 	if err != nil {
 		http.Error(w, "fail internal exec\n", http.StatusInternalServerError)
 		return
@@ -63,14 +67,14 @@ func ArticleListHandler(w http.ResponseWriter, req *http.Request) {
 }
 
 // 記事No.xxの投稿データを取得するエンドポイント
-func ArticleDetailHandler(w http.ResponseWriter, req *http.Request) {
+func (c *MyAppController) ArticleDetailHandler(w http.ResponseWriter, req *http.Request) {
 	articleID, err := strconv.Atoi(mux.Vars(req)["id"])
 	if err != nil {
 		http.Error(w, "Invalid query parameter", http.StatusBadRequest)
 		return
 	}
 
-	article, err := services.GetArticleService(articleID)
+	article, err := c.service.GetArticleService(articleID)
 	if err != nil {
 		http.Error(w, "fail internal exec\n", http.StatusInternalServerError)
 		return
@@ -80,7 +84,7 @@ func ArticleDetailHandler(w http.ResponseWriter, req *http.Request) {
 }
 
 // 記事にいいね！をつけるハンドラ
-func PostNiceHandler(w http.ResponseWriter, req *http.Request) {
+func (c *MyAppController) PostNiceHandler(w http.ResponseWriter, req *http.Request) {
 	// jsonデコードする（json→構造体）
 	var reqArticle models.Article
 	if err := json.NewDecoder(req.Body).Decode(&reqArticle); err != nil {
@@ -88,7 +92,7 @@ func PostNiceHandler(w http.ResponseWriter, req *http.Request) {
 	}
 
 	// jsonエンコードする（構造体→json）
-	article, err := services.PostNiceService(reqArticle)
+	article, err := c.service.PostNiceService(reqArticle)
 	if err != nil {
 		http.Error(w, "fail internal exec\n", http.StatusInternalServerError)
 		return
@@ -97,7 +101,7 @@ func PostNiceHandler(w http.ResponseWriter, req *http.Request) {
 }
 
 // 記事にコメントを投稿するハンドラ
-func PostCommentHandler(w http.ResponseWriter, req *http.Request) {
+func (c *MyAppController) PostCommentHandler(w http.ResponseWriter, req *http.Request) {
 	// jsonデコードする（json→構造体）
 	var reqComment models.Comment
 	if err := json.NewDecoder(req.Body).Decode(&reqComment); err != nil {
@@ -105,7 +109,7 @@ func PostCommentHandler(w http.ResponseWriter, req *http.Request) {
 	}
 
 	// jsonエンコードする（構造体→json）
-	comment, err := services.PostCommentService(reqComment)
+	comment, err := c.service.PostCommentService(reqComment)
 	if err != nil {
 		http.Error(w, "fail internal exec\n", http.StatusInternalServerError)
 		return
