@@ -1,15 +1,14 @@
-// ハンドラの定義を記述
 package handlers
 
 import (
 	"encoding/json"
 	"io"
-	"log"
 	"net/http"
 	"strconv"
 
 	"github.com/gorilla/mux"
 	"github.com/yourname/reponame/models"
+	"github.com/yourname/reponame/services"
 )
 
 // ハンドラ: HTTPリクエストを受け取って、それに対するHTTPレスポンスの内容をコネクションに書き込む
@@ -17,17 +16,7 @@ import (
 
 // ハンドラの定義
 func HelloHandler(w http.ResponseWriter, req *http.Request) {
-	io.WriteString(w, "Hello world!\n")
-
-	/*
-		// req: http.Requestで受けとって、w: http.ResponseWriterに書き込む
-		if req.Method == http.MethodGet {
-			io.WriteString(w, "Hello, world!\n")
-		} else {
-			// Invalid methodを405番のステータスコードとともに返す
-			http.Error(w, "Invalid method", http.StatusMethodNotAllowed)
-		}
-	*/
+	io.WriteString(w, "Hello, world!\n")
 }
 
 func PostArticleHandler(w http.ResponseWriter, req *http.Request) {
@@ -38,37 +27,38 @@ func PostArticleHandler(w http.ResponseWriter, req *http.Request) {
 	}
 
 	// jsonエンコードする(構造体→json)
-	article := reqArticle
+
+	article, err := services.PostArticleService(reqArticle)
+	if err != nil {
+		http.Error(w, "fail internal exec\n", http.StatusInternalServerError)
+		return
+	}
+
 	json.NewEncoder(w).Encode(article)
 }
 
 // ブログ一覧を取得するハンドラ
 func ArticleListHandler(w http.ResponseWriter, req *http.Request) {
-	// クエリパラメータを取得
 	queryMap := req.URL.Query()
 
 	var page int
-	// パラメータのpageが一つ以上あるなら、
-	// キー:pageの存在確認 true, falseをokに格納
 	if p, ok := queryMap["page"]; ok && len(p) > 0 {
-		// パラメータpageに対応する１つ目の値を取得し、数値に変換する
 		var err error
 		page, err = strconv.Atoi(p[0])
-		// 数値に変換できない場合は400番エラーを返す
-		// 400: ユーザーリクエストの値が不正である
 		if err != nil {
 			http.Error(w, "Invalid query parameter", http.StatusBadRequest)
 			return
 		}
-		// パラメータが存在しなかった場合は1を付与する
 	} else {
 		page = 1
 	}
 
-	log.Println(page)
-
 	// jsonエンコードする（構造体→json）
-	articleList := []models.Article{models.Article1, models.Article2}
+	articleList, err := services.GetArticleListService(page)
+	if err != nil {
+		http.Error(w, "fail internal exec\n", http.StatusInternalServerError)
+		return
+	}
 	json.NewEncoder(w).Encode(articleList)
 }
 
@@ -80,9 +70,12 @@ func ArticleDetailHandler(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	log.Println(articleID)
+	article, err := services.GetArticleService(articleID)
+	if err != nil {
+		http.Error(w, "fail internal exec\n", http.StatusInternalServerError)
+		return
+	}
 
-	article := models.Article1
 	json.NewEncoder(w).Encode(article)
 }
 
@@ -95,7 +88,11 @@ func PostNiceHandler(w http.ResponseWriter, req *http.Request) {
 	}
 
 	// jsonエンコードする（構造体→json）
-	article := reqArticle
+	article, err := services.PostNiceService(reqArticle)
+	if err != nil {
+		http.Error(w, "fail internal exec\n", http.StatusInternalServerError)
+		return
+	}
 	json.NewEncoder(w).Encode(article)
 }
 
@@ -108,6 +105,10 @@ func PostCommentHandler(w http.ResponseWriter, req *http.Request) {
 	}
 
 	// jsonエンコードする（構造体→json）
-	comment := reqComment
+	comment, err := services.PostCommentService(reqComment)
+	if err != nil {
+		http.Error(w, "fail internal exec\n", http.StatusInternalServerError)
+		return
+	}
 	json.NewEncoder(w).Encode(comment)
 }

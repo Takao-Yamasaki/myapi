@@ -2,6 +2,7 @@ package repositories
 
 import (
 	"database/sql"
+	"fmt"
 
 	"github.com/yourname/reponame/models"
 )
@@ -18,13 +19,13 @@ func InsertArticle(db *sql.DB, article models.Article) (models.Article, error) {
 	`
 
 	var newArticle models.Article
-
 	newArticle.Title, newArticle.Contents, newArticle.UserName = article.Title, article.Contents, article.UserName
 
 	result, err := db.Exec(sqlStr, article.Title, article.Contents, article.UserName)
 	if err != nil {
 		return models.Article{}, err
 	}
+
 	id, _ := result.LastInsertId()
 
 	newArticle.ID = int(id)
@@ -39,14 +40,15 @@ func SelectArticleList(db *sql.DB, page int) ([]models.Article, error) {
 		from articles
 		limit ? offset ?;
 	`
+
 	rows, err := db.Query(sqlStr, articleNumPerPage, ((page - 1) * articleNumPerPage))
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
+	fmt.Println(rows)
 
 	articleArray := make([]models.Article, 0)
-
 	for rows.Next() {
 		var article models.Article
 		rows.Scan(&article.ID, &article.Title, &article.Contents, &article.UserName, &article.NiceNum)
@@ -110,6 +112,7 @@ func UpdateNiceNum(db *sql.DB, articleID int) error {
 		tx.Rollback()
 		return err
 	}
+
 	const sqlUpdateNice = `update articles set nice = ? where article_id = ?`
 	_, err = tx.Exec(sqlUpdateNice, nicenum+1, articleID)
 	if err != nil {
