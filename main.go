@@ -8,8 +8,8 @@ import (
 	"database/sql"
 
 	_ "github.com/go-sql-driver/mysql"
-	"github.com/gorilla/mux"
 	"github.com/yourname/reponame/controllers"
+	"github.com/yourname/reponame/routers"
 	"github.com/yourname/reponame/services"
 )
 
@@ -29,19 +29,8 @@ func main() {
 
 	ser := services.NewMyAppService(db)
 	con := controllers.NewMyAppController(ser)
-	// ルータrを明示的に宣言
-	r := mux.NewRouter()
 
-	// 定義したハンドラをサーバーで使用するように登録
-	// パスとハンドラを対応づける
-	r.HandleFunc("/hello", con.HelloHandler).Methods(http.MethodGet)
-
-	r.HandleFunc("/article", con.PostArticleHandler).Methods(http.MethodPost)
-	r.HandleFunc("/article/list", con.ArticleListHandler).Methods(http.MethodGet)
-	r.HandleFunc("/article/{id:[0-9]+}", con.ArticleDetailHandler).Methods(http.MethodGet)
-	r.HandleFunc("/article/nice", con.PostNiceHandler).Methods(http.MethodPost)
-
-	r.HandleFunc("/comment", con.PostCommentHandler).Methods(http.MethodPost)
+	r := routers.NewRouter(con)
 
 	// サーバ起動時のログを出力する
 	log.Println("server start at port 8080")
