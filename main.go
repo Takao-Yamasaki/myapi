@@ -8,9 +8,7 @@ import (
 	"database/sql"
 
 	_ "github.com/go-sql-driver/mysql"
-	"github.com/yourname/reponame/controllers"
-	"github.com/yourname/reponame/routers"
-	"github.com/yourname/reponame/services"
+	"github.com/yourname/reponame/api"
 )
 
 var (
@@ -27,10 +25,7 @@ func main() {
 		return
 	}
 
-	ser := services.NewMyAppService(db)
-	con := controllers.NewMyAppController(ser)
-
-	r := routers.NewRouter(con)
+	r := api.NewRouter(db)
 
 	// サーバ起動時のログを出力する
 	log.Println("server start at port 8080")
