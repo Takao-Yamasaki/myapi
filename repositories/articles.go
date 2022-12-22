@@ -2,7 +2,6 @@ package repositories
 
 import (
 	"database/sql"
-	"fmt"
 
 	"github.com/yourname/reponame/models"
 )
@@ -46,7 +45,6 @@ func SelectArticleList(db *sql.DB, page int) ([]models.Article, error) {
 		return nil, err
 	}
 	defer rows.Close()
-	fmt.Println(rows)
 
 	articleArray := make([]models.Article, 0)
 	for rows.Next() {

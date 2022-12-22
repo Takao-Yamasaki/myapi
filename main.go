@@ -1,11 +1,9 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"log"
 	"net/http"
-	"strconv"
 
 	"database/sql"
 
@@ -31,15 +29,6 @@ func main() {
 
 	// サーバ起動時のログを出力する
 	log.Println("server start at port 8080")
-
-	_, err0 := strconv.Atoi("a")
-	fmt.Printf("err0: [%T] %v\n", err0, err0)
-
-	err1 := errors.Unwrap(err0)
-	fmt.Printf("err1: [%T] %v\n", err1, err1)
-
-	err2 := errors.Unwrap(err1)
-	fmt.Printf("err2: [%T] %v\n", err2, err2)
 	
 	// サーバー起動
 	// log.Fatal: 重大なエラーが発生した際に、ログを出力させた上で、プログラムを終了させる。
