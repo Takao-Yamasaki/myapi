@@ -5,6 +5,7 @@ package services
 import (
 	"database/sql"
 	"errors"
+	"sync"
 
 	"github.com/yourname/reponame/apperrors"
 	"github.com/yourname/reponame/models"
@@ -40,17 +41,37 @@ func (s *MyAppService) GetArticleService(articleID int) (models.Article, error) 
 	var commentList []models.Comment
 	var articleGetErr, commentGetErr error
 
-	
+	// 待ち合わせ機構で、内部カウンタは0
+	var wg sync.WaitGroup
+	// 内部カウンタを+2
+	wg.Add(2)
+
+	var amu sync.Mutex
+	var cmu sync.Mutex
+
 	// 記事の詳細を取得
-	go func() {
-		article, articleGetErr = repositories.SelectArticleDetail(s.db, articleID)
-	}()
-	
+	go func(db *sql.DB, articleID int) {
+		// 内部カウンタを-1
+		defer wg.Done()
+		newarticle, err := repositories.SelectArticleDetail(db, articleID)
+		amu.Lock()
+		article, articleGetErr = newarticle, err
+		amu.Unlock()
+	}(s.db, articleID)
+
 	// コメント一覧を取得
-	go func() {
-		commentList, commentGetErr := repositories.SelectArticleList(s.db, articleID)
-	}()
-	
+	go func(db *sql.DB, articleID int) {
+		// 内部カウンタを-1
+		defer wg.Done()
+		newcommentList, err := repositories.SelectCommentList(db, articleID)
+		cmu.Lock()
+		commentList, commentGetErr = newcommentList, err
+		cmu.Unlock()
+	}(s.db, articleID)
+
+	// カウンタが0になるまで待機
+	wg.Wait()
+
 	if articleGetErr != nil {
 		if errors.Is(articleGetErr, sql.ErrNoRows) {
 			err := apperrors.NAData.Wrap(articleGetErr, "no data")
@@ -59,7 +80,6 @@ func (s *MyAppService) GetArticleService(articleID int) (models.Article, error) 
 		err := apperrors.GetDataFailed.Wrap(articleGetErr, "fail to get data")
 		return models.Article{}, err
 	}
-
 
 	if commentGetErr != nil {
 		err := apperrors.GetDataFailed.Wrap(commentGetErr, "fail to get data")
