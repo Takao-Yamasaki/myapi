@@ -27,8 +27,10 @@ func SetTraceID(ctx context.Context, traceID int) context.Context {
 	return context.WithValue(ctx, "traceID", traceID)
 }
 
+type traceIDKey struct{}
+
 func GetTraceID(ctx context.Context) int {
-	id := ctx.Value("traceID")
+	id := ctx.Value(traceIDKey{})
 
 	// 型アサーション
 	if idInt, ok := id.(int); ok {
